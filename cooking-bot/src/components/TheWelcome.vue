@@ -143,13 +143,12 @@ h1, h2 {
 
 h2 {
   font-size: 1.5rem;
-  margin-top: 30px;
+  margin-top: 10px;
 }
 
 .buttons {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
 }
 
 button {

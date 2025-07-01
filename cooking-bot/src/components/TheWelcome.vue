@@ -20,11 +20,11 @@
   <div>
     <h2>Pending List</h2>
     <div>
-      <p v-for="order in pending" :key="order.type">{{ order.id }} {{ order.type }} - {{ order.time_left }}</p>
+      <p v-for="order in pending" :key="order.id">{{ order.id }} {{ order.type }} - {{ order.time_left }}</p>
     </div>
     <h2>Complete List</h2>
     <div>
-      <p v-for="order in complete" :key="order.type">{{ order.id }} {{ order.type }}</p>
+      <p v-for="order in complete" :key="order.id">{{ order.id }} {{ order.type }}</p>
     </div>
   </div>
 </template>
@@ -60,7 +60,8 @@ export default {
     },
     orderVIP() {
       this.orders += 1
-      this.pending.push({
+      let numberVIP = this.pending.filter(order => order.type === 'VIP').length
+      this.pending.splice(numberVIP, 0, {
         id: this.orders,
         type: 'VIP',
         bot_index: null,
@@ -82,12 +83,22 @@ export default {
       this.bots.splice(this.bots.length - 1, 1)
     },
     updatePendingOrders() {
+      if (this.pending.length === 0 || this.bots.length === 0) {
+        return
+      }
+
       this.pending.forEach((order, index) => {
         if (order.bot_index === null) {
           const availableBotIndex = this.bots.findIndex(bot => bot.status === 'idle')
           if (availableBotIndex !== -1) {
             order.bot_index = availableBotIndex
             this.bots[availableBotIndex].status = 'busy'
+          } else if (availableBotIndex === -1 && order.type === 'VIP') {
+            const normalOrderIndex = this.pending.findIndex(order => order.type === 'Normal' && order.bot_index !== null);
+            if (normalOrderIndex !== -1) {
+              order.bot_index = this.pending[normalOrderIndex].bot_index
+              this.pending[normalOrderIndex].bot_index = null
+            }
           }
         }
 

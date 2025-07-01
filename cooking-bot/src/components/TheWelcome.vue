@@ -6,25 +6,36 @@
     <button @click="addBot">+ Bot</button>
     <button @click="minusBot">- Bot</button>
   </div>
-  <div>
+  <div class="order-status">
     <h2>Order Status</h2>
-    <div>
-      <p>Total Pending Orders: {{ pending.length }}</p>
-      <p>Total Complete Orders: {{ complete.length }}</p>
-      <p>Total Bots:</p>
-      <div>
-        <p v-for="bot in bots" :key="bot.index">{{ bot.name }} - {{ bot.status }}</p>
+    <div class="status-grid">
+      <div><strong>Pending:</strong> {{ pending.length }}</div>
+      <div><strong>Complete:</strong> {{ complete.length }}</div>
+      <div><strong>Total Bots:</strong> {{ bots.length }}</div>
+    </div>
+    <div class="bot-list">
+      <h3>Bots</h3>
+      <div v-if="bots.length">
+        <p v-for="(bot, index) in bots" :key="index">{{ bot.name }} - <span :class="bot.status">{{ bot.status }}</span></p>
       </div>
+      <p v-else>No bots active</p>
     </div>
   </div>
-  <div>
-    <h2>Pending List</h2>
-    <div>
-      <p v-for="order in pending" :key="order.id">{{ order.id }} {{ order.type }} - {{ order.time_left }}</p>
+  <div class="order-lists">
+    <div class="order-column">
+      <h2>Pending List</h2>
+      <div v-if="pending.length > 0" class="order-box">
+        <p v-for="order in pending" :key="order.id">{{ order.id }} {{ order.type }} - {{ order.time_left }}</p>
+      </div>
+      <p v-else class="no-orders">No pending orders</p>
     </div>
-    <h2>Complete List</h2>
-    <div>
-      <p v-for="order in complete" :key="order.id">{{ order.id }} {{ order.type }}</p>
+
+    <div class="order-column">
+      <h2>Complete List</h2>
+      <div v-if="complete.length > 0" class="order-box">
+        <p v-for="order in complete" :key="order.id">{{ order.id }} {{ order.type }}</p>
+      </div>
+      <p v-else class="no-orders">No complete orders</p>
     </div>
   </div>
 </template>
@@ -61,6 +72,7 @@ export default {
     orderVIP() {
       this.orders += 1
       let numberVIP = this.pending.filter(order => order.type === 'VIP').length
+      // VIP order are adding to the end of VIP list
       this.pending.splice(numberVIP, 0, {
         id: this.orders,
         type: 'VIP',
@@ -75,6 +87,7 @@ export default {
       })
     },
     minusBot() {
+      // check if any pending order using any bot
       const botOrder = this.pending.findIndex(order => order.bot_index === this.bots.length - 1)
       if (botOrder !== -1) {
         this.pending[botOrder].bot_index = null
@@ -83,17 +96,19 @@ export default {
       this.bots.splice(this.bots.length - 1, 1)
     },
     updatePendingOrders() {
+      // skip if no pending order or bot
       if (this.pending.length === 0 || this.bots.length === 0) {
         return
       }
 
       this.pending.forEach((order, index) => {
+        // if order not assiged to bot yet, assigned a bot if available
         if (order.bot_index === null) {
           const availableBotIndex = this.bots.findIndex(bot => bot.status === 'idle')
           if (availableBotIndex !== -1) {
             order.bot_index = availableBotIndex
             this.bots[availableBotIndex].status = 'busy'
-          } else if (availableBotIndex === -1 && order.type === 'VIP') {
+          } else if (availableBotIndex === -1 && order.type === 'VIP') { // if not idle bot then order type is VIP then check normal order bot avaibility
             const normalOrderIndex = this.pending.findIndex(order => order.type === 'Normal' && order.bot_index !== null);
             if (normalOrderIndex !== -1) {
               order.bot_index = this.pending[normalOrderIndex].bot_index
@@ -102,10 +117,12 @@ export default {
           }
         }
 
+        // if order already have bot assiged then start countdown
         if (order.bot_index !== null) {
           order.time_left -= 1
         }
-        
+
+        // if order time is up then move to complete list
         if (order.time_left <= 0) {
           const completedOrder = this.pending.splice(index, 1)[0]
           this.complete.push(completedOrder)
@@ -167,84 +184,56 @@ button.active {
   box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
 }
 
+.order-status {
+  background-color: #fdfdfd;
+  padding: 20px;
+  border-radius: 6px;
+  margin-bottom: 30px;
+}
+
+.status-grid {
+  display: flex;
+  gap: 40px;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+}
+
+.bot-list span.idle {
+  color: green;
+}
+.bot-list span.busy {
+  color: red;
+}
+
 .orders-section {
   margin-top: 30px;
 }
 
-.order-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-}
-
-.order-card {
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  padding: 15px;
-  border-left: 4px solid #42b983;
-  position: relative;
-}
-
-.order-card.completed {
-  border-left-color: #3498db;
-  opacity: 0.8;
-}
-
-.order-header {
+.order-lists {
   display: flex;
+  gap: 40px;
   justify-content: space-between;
-  margin-bottom: 10px;
-  font-weight: bold;
+  margin-top: 30px;
 }
 
-.order-type {
-  padding: 3px 8px;
-  border-radius: 3px;
-  color: white;
-  font-size: 0.9rem;
+.order-column {
+  flex: 1;
 }
 
-.order-type.normal {
-  background-color: #42b983;
-}
-
-.order-type.vip {
-  background-color: #e74c3c;
-}
-
-.order-time {
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-.order-details {
-  margin-bottom: 15px;
-}
-
-.complete-button {
-  background-color: #3498db;
-  color: white;
-  padding: 5px 10px;
-  font-size: 0.9rem;
-}
-
-.delivery-note {
-  margin-top: 5px;
-  font-style: italic;
-  color: #6c757d;
-}
-
-.delivery-note small {
-  display: block;
-  margin-bottom: 10px;
+.order-box {
+  background-color: #f4f6f8;
+  border-radius: 5px;
+  padding: 15px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  min-height: 150px;
 }
 
 .no-orders {
-  margin-top: 30px;
-  padding: 20px;
-  background-color: #f8f9fa;
+  padding: 15px;
+  background-color: #f0f0f0;
   border-radius: 4px;
   text-align: center;
-  color: #6c757d;
+  color: #999;
+  margin-top: 10px;
 }
 </style>

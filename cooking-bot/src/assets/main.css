@@ -1,35 +1,99 @@
-@import './base.css';
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+h1, h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+h2 {
+  font-size: 1.5rem;
+  margin-top: 10px;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+.buttons {
+  display: flex;
+  gap: 10px;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.buttons button:nth-child(1) {
+  background-color: #42b983;
+  color: white;
+}
+
+.buttons button:nth-child(2) {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.buttons button:nth-child(3), .buttons button:nth-child(4) {
+  background-color: #3498db;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+button.active {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+}
+
+.order-status {
+  background-color: #fdfdfd;
+  padding: 20px;
+  border-radius: 6px;
+  margin-bottom: 30px;
+}
+
+.status-grid {
+  display: flex;
+  gap: 40px;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+}
+
+.bot-list span.idle {
+  color: green;
+}
+.bot-list span.busy {
+  color: red;
+}
+
+.orders-section {
+  margin-top: 30px;
+}
+
+.order-lists {
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.order-column {
+  flex: 1;
+}
+
+.order-box {
+  background-color: #f4f6f8;
+  border-radius: 5px;
+  padding: 15px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  min-height: 150px;
+}
+
+.no-orders {
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  text-align: center;
+  color: #999;
+  margin-top: 10px;
 }

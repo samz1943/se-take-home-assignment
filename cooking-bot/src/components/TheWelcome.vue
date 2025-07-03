@@ -25,7 +25,7 @@
     <div class="order-column">
       <h2>Pending List</h2>
       <div v-if="pending.length > 0" class="order-box">
-        <p v-for="order in pending" :key="order.id">{{ order.id }} {{ order.type }} - {{ order.time_left }}</p>
+        <p v-for="order in pending" :key="order.id">{{ order.id }} {{ order.type }} - {{ order.time_left }} <span v-if="order.bot.index !== null"> ({{ order.bot.name }})</span></p>
       </div>
       <p v-else class="no-orders">No pending orders</p>
     </div>
@@ -65,7 +65,10 @@ export default {
       this.pending.push({
         id: this.orders,
         type: 'Normal',
-        bot_index: null,
+        bot: {
+          index: null,
+          name: null
+        },
         time_left: 10
       })
     },
@@ -76,7 +79,10 @@ export default {
       this.pending.splice(numberVIP, 0, {
         id: this.orders,
         type: 'VIP',
-        bot_index: null,
+        bot: {
+          index: null,
+          name: null
+        },
         time_left: 10
       })
     },
@@ -88,9 +94,10 @@ export default {
     },
     minusBot() {
       // check if any pending order using any bot
-      const botOrder = this.pending.findIndex(order => order.bot_index === this.bots.length - 1)
+      const botOrder = this.pending.findIndex(order => order.bot.index === this.bots.length - 1)
       if (botOrder !== -1) {
-        this.pending[botOrder].bot_index = null
+        this.pending[botOrder].bot.index = null
+        this.pending[botOrder].bot.name = null
         this.pending[botOrder].time_left = this.pending[botOrder].time_left
       }
       this.bots.splice(this.bots.length - 1, 1)
@@ -103,22 +110,25 @@ export default {
 
       this.pending.forEach((order, index) => {
         // if order not assiged to bot yet, assigned a bot if available
-        if (order.bot_index === null) {
+        if (order.bot.index === null) {
           const availableBotIndex = this.bots.findIndex(bot => bot.status === 'idle')
           if (availableBotIndex !== -1) {
-            order.bot_index = availableBotIndex
             this.bots[availableBotIndex].status = 'busy'
+            order.bot.index = availableBotIndex
+            order.bot.name = this.bots[availableBotIndex].name
           } else if (availableBotIndex === -1 && order.type === 'VIP') { // if not idle bot then order type is VIP then check normal order bot avaibility
-            const normalOrderIndex = this.pending.findIndex(order => order.type === 'Normal' && order.bot_index !== null);
+            const normalOrderIndex = this.pending.findIndex(order => order.type === 'Normal' && order.bot.index !== null);
             if (normalOrderIndex !== -1) {
-              order.bot_index = this.pending[normalOrderIndex].bot_index
-              this.pending[normalOrderIndex].bot_index = null
+              order.bot.index = this.pending[normalOrderIndex].bot.index
+              order.bot.name = this.pending[normalOrderIndex].bot.name
+              this.pending[normalOrderIndex].bot.index = null
+              this.pending[normalOrderIndex].bot.name = null
             }
           }
         }
 
         // if order already have bot assiged then start countdown
-        if (order.bot_index !== null) {
+        if (order.bot.index !== null) {
           order.time_left -= 1
         }
 
@@ -127,112 +137,12 @@ export default {
           const completedOrder = this.pending.splice(index, 1)[0]
           this.complete.push(completedOrder)
 
-          this.bots[order.bot_index].status = 'idle'
+          console.log('time', this.bots)
+
+          this.bots[order.bot.index].status = 'idle'
         }
       })
     },
   }
 }
 </script>
-
-<style scoped>
-h1, h2 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-}
-
-h2 {
-  font-size: 1.5rem;
-  margin-top: 10px;
-}
-
-.buttons {
-  display: flex;
-  gap: 10px;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.buttons button:nth-child(1) {
-  background-color: #42b983;
-  color: white;
-}
-
-.buttons button:nth-child(2) {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.buttons button:nth-child(3), .buttons button:nth-child(4) {
-  background-color: #3498db;
-  color: white;
-}
-
-button:hover {
-  opacity: 0.8;
-}
-
-button.active {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
-}
-
-.order-status {
-  background-color: #fdfdfd;
-  padding: 20px;
-  border-radius: 6px;
-  margin-bottom: 30px;
-}
-
-.status-grid {
-  display: flex;
-  gap: 40px;
-  font-size: 1.1rem;
-  margin-bottom: 15px;
-}
-
-.bot-list span.idle {
-  color: green;
-}
-.bot-list span.busy {
-  color: red;
-}
-
-.orders-section {
-  margin-top: 30px;
-}
-
-.order-lists {
-  display: flex;
-  gap: 40px;
-  justify-content: space-between;
-  margin-top: 30px;
-}
-
-.order-column {
-  flex: 1;
-}
-
-.order-box {
-  background-color: #f4f6f8;
-  border-radius: 5px;
-  padding: 15px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
-  min-height: 150px;
-}
-
-.no-orders {
-  padding: 15px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
-  text-align: center;
-  color: #999;
-  margin-top: 10px;
-}
-</style>
